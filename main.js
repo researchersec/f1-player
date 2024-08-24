@@ -1,23 +1,36 @@
 // main.js
 
-// Example of a base64 encoded and compressed telemetry data snippet
-const telemetrySnippet = [
-    "00:00:03.712\"1ZixbhsxDIbfRbNTkBQlircGfYN2adEhKAK0QOEhzWb43XOW5EKJGJ8t5JxmsQHhfov6SX7ieec+bx8fft//ddP3nfv6+NNNjoDwBvgG0xekycME/hMgeAL85jbu9u5hfnrn/OHj9tfddnv/Jy+AmxBVeOPITeRhc3gkbBy7SXXjgpvmJZ6/cL/Pq50csrQIIT8CnS5Y2wJHzVoUzGrO6oCdPBpyCVh2TimLqdkaoVWLoQ4BJKu5qPGVwNXQsk/FrnDyzAiDZiEaQh8Cn6O1MpQ8YjEa/IJXaFndBz3nroq5FSdDHAP6rNdil88/QG3kcBATDdrlLbuSaCxHRm22ldjL7ZaIVGqTgmR9rOfu92fLcsaqR+yCf+44W+VZzs2ne8pqqnNTFa1TJ380LaaGA2ZPWVEjKNdCE9+4rr3rajXWcrZn6SngUQBKPi0Dj/EIvHBN4AlAtSe0wOvlNvC0NFKSpomRO7HJO4+Vd3I574jh+rzzRMO8g1i0unQ1rIA7krp32wEv9l4VeDQGPKJYgZeGgAeHe/hw7o/DO0UoucIKeb6Qd7NphSOY2gnGMm0d4LEC8TLvQOqkRb5N7uq8S3zknQzwTqwBj/rp0OQdxlpTYWC+8/oOvKspGuDdnN1nI1Zxyvfit6cdcIlaoaPdeqxTqQM4+hay0pezzTrgUPqeYmlbuZR1obAufhzWJaISM3IYY13gesHo+7BO/LxIYRl2WkcdYrwi7GYjqj8JRmAndbjTFnZ9D1u54SS1qPhy2GGdlXrYvRiV3hZ3UYdfZ0UgFOhg41Wf3hVxV0fw6+AO53G2llb9t6K+VvVX4Wu8O77ujPKO5Kwa+Y94p/jvjsAx3kn9hwg1rsW7H/sn"
-    // Add more data snippets as needed
-];
-
 // Function to decode and decompress telemetry data
 function decodeTelemetry(encodedData) {
-    const compressedData = atob(encodedData);
-    const decompressedData = pako.inflateRaw(compressedData, { to: 'string' });
-    return decompressedData;
+    try {
+        // Remove any non-base64 characters from the string
+        const sanitizedData = encodedData.replace(/[^A-Za-z0-9+/=]/g, '');
+
+        // Decode the base64 string to binary data
+        const binaryData = atob(sanitizedData);
+
+        // Convert the binary data to a Uint8Array
+        const binaryArray = Uint8Array.from(binaryData, (char) => char.charCodeAt(0));
+
+        // Decompress the binary array using pako
+        const decompressedData = pako.inflateRaw(binaryArray, { to: 'string' });
+
+        return decompressedData;
+    } catch (error) {
+        console.error('Error during decoding or decompression:', error);
+        return null;
+    }
 }
 
 // Function to parse telemetry data into a JSON object
 function parseTelemetry(dataString) {
-    const data = JSON.parse(dataString);
-    // Transform data as needed, depending on its structure
-    return data;
+    try {
+        const data = JSON.parse(dataString);
+        return data; // Ensure this structure matches your expected data format
+    } catch (error) {
+        console.error('Error parsing telemetry data:', error);
+        return null;
+    }
 }
 
 // Function to render a car on the circuit map
@@ -30,8 +43,15 @@ function renderCar(position) {
     circuitMap.appendChild(car);
 }
 
+// Function to update the slider based on current index
+function updateSlider(currentIndex, totalLength) {
+    const slider = document.getElementById('time-slider');
+    const percentage = (currentIndex / (totalLength - 1)) * 100;
+    slider.value = percentage;
+}
+
 // Function to initialize and play the race
-function playRace() {
+function playRace(telemetryData) {
     let index = 0;
     let playing = false;
     let interval;
@@ -44,7 +64,7 @@ function playRace() {
         const dataPoint = telemetryData[index];
         renderCar({ x: dataPoint.x, y: dataPoint.y });
         index++;
-        updateSlider(index);
+        updateSlider(index, telemetryData.length);
     }
 
     function startRace() {
@@ -64,7 +84,7 @@ function playRace() {
         playing = false;
         index = 0;
         document.querySelectorAll('.car').forEach(car => car.remove());
-        updateSlider(index);
+        updateSlider(index, telemetryData.length);
     }
 
     document.getElementById('play').addEventListener('click', startRace);
@@ -83,11 +103,27 @@ function playRace() {
     });
 }
 
-// Initialize telemetry data and start the player
-const telemetryData = telemetrySnippet.map(snippet => {
-    const [timestamp, encodedData] = snippet.split('"');
-    const decodedData = decodeTelemetry(encodedData);
-    return parseTelemetry(decodedData);
-});
+// Function to fetch and process the jsonStream file
+async function fetchAndProcessTelemetry(file) {
+    try {
+        const response = await fetch(file);
+        const fileText = await response.text();
 
-playRace();
+        const telemetryData = fileText.split("\n").map(line => {
+            if (!line.trim()) return null; // Skip empty lines
+            const [timestamp, encodedData] = line.split('"');
+            const decodedData = decodeTelemetry(encodedData);
+            if (decodedData) {
+                return parseTelemetry(decodedData);
+            }
+            return null;
+        }).filter(data => data !== null);
+
+        playRace(telemetryData);
+    } catch (error) {
+        console.error('Error fetching or processing telemetry file:', error);
+    }
+}
+
+// Call function to fetch and process the telemetry data
+fetchAndProcessTelemetry('Emilia2021.jsonStream');
