@@ -5,16 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F1 Telemetry Player</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Include Pako Library for decompression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+    <script src="main.js" defer></script>
 </head>
 <body>
-    <div id="circuit-map"></div>
-    <div id="controls">
+    <div id="circuit-map">
+        <!-- Car positions will be dynamically added here -->
+    </div>
+    <div class="controls">
         <button id="play">Play</button>
         <button id="pause">Pause</button>
         <button id="stop">Stop</button>
         <input type="range" id="time-slider" min="0" max="100" value="0">
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script> <!-- Library for decompression -->
-    <script src="main.js"></script>
 </body>
 </html>
