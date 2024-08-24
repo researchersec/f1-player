@@ -1,0 +1,18 @@
+#circuit-map {
+    width: 800px;
+    height: 600px;
+    border: 1px solid #000;
+    position: relative;
+}
+
+.car {
+    width: 5px;
+    height: 5px;
+    background-color: red;
+    position: absolute;
+    border-radius: 50%;
+}
+
+#controls {
+    margin-top: 20px;
+}
