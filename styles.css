@@ -1,18 +1,43 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}
+
 #circuit-map {
-    width: 800px;
-    height: 600px;
-    border: 1px solid #000;
     position: relative;
+    width: 800px;  /* Adjust according to your circuit map's aspect ratio */
+    height: 600px; /* Adjust according to your circuit map's aspect ratio */
+    background: url('imola-circuit.png') no-repeat center center; /* Path to your circuit map image */
+    background-size: cover;
+    border: 2px solid #333;
+    margin-bottom: 20px;
 }
 
 .car {
-    width: 5px;
-    height: 5px;
-    background-color: red;
     position: absolute;
+    width: 10px; /* Adjust size for better visualization */
+    height: 10px;
+    background-color: red;
     border-radius: 50%;
 }
 
-#controls {
-    margin-top: 20px;
+.controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.controls button {
+    margin: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+#time-slider {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 10px;
 }
